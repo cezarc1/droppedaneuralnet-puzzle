@@ -1,0 +1,26 @@
+[project]
+name = "droppedaneuralnet"
+authors = [
+    { name = "Cezar Cocu", email = "me@cezarcocu.com" },
+]
+version = "0.1.0"
+description = "Solves the Jane Street 'I Dropped a Neural Net' puzzle"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "numpy>=2.0",
+    "pandas>=2.2",
+    "torch>=2.4",
+    "scipy>=1.14",
+]
+
+[tool.ruff]
+line-length = 88
+target-version = "py312"
+
+[tool.ruff.lint]
+# E/F/I/UP: pycodestyle, pyflakes, isort, pyupgrade.
+# B: bugbear (real bug-catchers, e.g. zip-without-strict).
+# SIM/RUF: simplification + ruff-native lints. ANN: require type annotations.
+# Deliberately omit T20 (print is this CLI's job) and D (docstring noise).
+select = ["E", "F", "I", "UP", "B", "SIM", "RUF", "ANN"]
