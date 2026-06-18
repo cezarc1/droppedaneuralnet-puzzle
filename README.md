@@ -40,19 +40,18 @@ Permutation (97 elements):
 43,34,65,22,69,89,28,12,27,76,81,8,5,21,62,79,64,70,94,96,4,17,48,9,23,46,14,33,95,26,50,66,1,40,15,67,41,92,16,83,77,32,10,20,3,53,45,19,87,71,88,54,39,38,18,25,56,30,91,29,44,82,35,24,61,80,86,57,31,36,13,7,59,52,68,47,84,63,74,90,0,75,73,11,37,6,58,78,42,55,49,72,2,51,60,93,85
 ```
 
-For comparison, I benchmarked the other public solutions this builds on, plus the fastest public solution I could find, on the same machine and Python 3.12.12 `uv` environment. The primary number below is the median full-script wall time over 5 runs after one warmup.
+For comparison, I benchmarked the other public solution this builds on, plus the fastest public solutions that I could find:
 
-| solution | ordering approach | median full-script wall time | internal solve timer |
+| solution | ordering approach | median full-script wall | internal solve timer |
 |---|---|---:|---:|
-| [Park](https://github.com/hynwprk/droppedaneuralnet) | Frobenius seed + MSE bubble repair | ~12.7 s | ~11.6 s |
-| [alyxya](https://github.com/alyxya/janestreet-droppedaneuralnet) | greedy seed + MSE bubble repair | ~12.7 s | n/a |
-| **our solution** | L1 seed + adjoint-predicted swaps | **~2.1 s** | **~0.80 s** |
+| **our solution** | L1 seed + adjoint-predicted swaps | **1.28 s** | **0.19 s** |
+| [alyxya](https://github.com/alyxya/janestreet-droppedaneuralnet) | greedy order + adjacent-swap bubble sort | 4.36 s | n/a |
+| [Park](https://github.com/hynwprk/droppedaneuralnet) | Frobenius seed + bubble-repair hill-climb | 4.97 s | 4.0 s |
+| [EugenHotaj](https://github.com/EugenHotaj/droppedaneuralnet) | cosine pairing + ~10k random-swap hill-climb | 196 s | n/a |
 
-The full-script wall time is the closest apples-to-apples comparison because each repo exposes different internal timing, and alyxya's script does not expose one. The internal solve timers exclude setup such as Python startup, imports, data loading, and final verification.
+All four solvers timmings include language runtime startup, imports, data loading and verification, which dominate the sub-5 s solvers. Some solvers don't provide the actual solve timing.
 
-## Data provenance
-
-The included `historical_data.csv` and `pieces/*.pth` files are from Jane Street's public [Hugging Face puzzle Space](https://huggingface.co/spaces/jane-street/droppedaneuralnet). This repository contains a solver and explanation for that puzzle; the puzzle and data are Jane Street's.
+All solvers run in a CPU-pinned k8s batch job on a single node, w/ a Intel Core i9-13900F CPU (no GPU acceleration).
 
 ## The idea, explained by Claude better than I ever could
 
