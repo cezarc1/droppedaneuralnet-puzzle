@@ -2,7 +2,7 @@
 
 Solves the 2nd NN-based [Jane Street puzzle](https://huggingface.co/spaces/jane-street/droppedaneuralnet) with a sub-second solve phase in the CPU-pinned benchmark snapshot below.
 
-*As of 06/16/2026 this is the fastest, by one order of magnitude, among the public CPU solutions I found and ran under the benchmark protocol below.*
+*As of 06/16/2026 this is the fastest among the public CPU solutions I surveyed under the benchmark protocol below.*
 
 This solution builds heavily on [Hyunwoo Park's solution](https://github.com/hynwprk/droppedaneuralnet).
 
@@ -61,9 +61,7 @@ After pairing the 48 input/output halves, just like Park did, the remaining task
 
 Now, in theory, we could try every ordering, but there are:
 
-$$
-48! \approx 10^{61}
-$$
+$$48! \approx 10^{61}$$
 
 possible orderings, so maybe we can do better!
 
@@ -71,7 +69,7 @@ A more reasonable approach is to try swapping neighboring blocks and check wheth
 
 1. swap two neighboring blocks;
 2. run a forward pass through the full network;
-3. measure the error (MSE) against the `pred` column for every row in the historical data sheet;
+3. measure the error (MSE) against the `pred` column in the historical data;
 4. keep the swap if it helped lower the error.
 
 That works, but can we avoid some repeated work? Well ... a neighboring swap only directly changes the numbers around those two blocks. Everything before the swap is unchanged, and most of the question is really:
@@ -82,9 +80,7 @@ The adjoint trick gives us a cheap way to estimate that.
 
 For the current guessed order, we run the full network once and save the 48 numbers after every block:
 
-$$
-x_0, x_1, x_2, \ldots, x_{48}.
-$$
+$$x_0, x_1, x_2, \ldots, x_{48}$$
 
 Here $x_t$ means:
 
@@ -92,9 +88,7 @@ Here $x_t$ means:
 
 Then we do one backward pass. At every position `t`, we compute a 48-number sensitivity vector:
 
-$$
-g_t = \frac{\partial \hat y}{\partial x_t}.
-$$
+$$g_t = \frac{\partial \hat{y}}{\partial x_t}$$
 
 This vector is the adjoint.
 
@@ -118,21 +112,15 @@ We already ran the current network once, so we have saved the 48 numbers before 
 
 With the current order, those two blocks produce:
 
-$$
-x_{t+2} = B(A(x_t))
-$$
+$$x_{t+2} = B(A(x_t))$$
 
 If we swap them, those same two blocks would instead produce:
 
-$$
-x'_{t+2} = A(B(x_t))
-$$
+$$x'_{t+2} = A(B(x_t))$$
 
 So the swap creates a local change:
 
-$$
-\delta = x'_{t+2} - x_{t+2}
-$$
+$$\delta = x'_{t+2} - x_{t+2}$$
 
 This local change is easy to compute. We only have to run the two swapped blocks.
 
@@ -146,9 +134,7 @@ At position $t+2$, we already cached the adjoint sensitivity vector $g_{t+2}$. T
 
 So we can estimate the swap’s effect on the final prediction with one dot product:
 
-$$
-\Delta \hat y \approx g_{t+2} \cdot \delta
-$$
+$$\Delta \hat{y} \approx g_{t+2} \cdot \delta$$
 
 In plain English:
 
@@ -158,23 +144,15 @@ Now we turn that predicted output change into a predicted error change.
 
 If the current prediction error is:
 
-$$
-e = \hat y - y
-$$
+$$e = \hat{y} - y$$
 
 then after the swap, we estimate the new error as:
 
-$$
-e + \Delta \hat y
-$$
+$$e + \Delta \hat{y}$$
 
 So the predicted change in squared error is:
 
-$$
-(e + \Delta \hat y)^2 - e^2
-=
-2e\Delta \hat y + (\Delta \hat y)^2
-$$
+$$(e + \Delta \hat{y})^2 - e^2 = 2e\Delta \hat{y} + (\Delta \hat{y})^2$$
 
 We average this predicted change over the sampled historical rows. If the average is confidently negative, the swap probably helps.
 
@@ -190,15 +168,11 @@ But we are not done. Pairing only says *which* two halves form each of the 48 bl
 
 The network feeds each block's output into the next, so the order changes the result. Solving the pairing cuts the search from:
 
-$$
-(48!)^2 \approx 10^{122}
-$$
+$$(48!)^2 \approx 10^{122}$$
 
 down to:
 
-$$
-48! \approx 10^{61}
-$$
+$$48! \approx 10^{61}$$
 
 orderings. Unfortunately, that is still far too many to brute-force.
 
